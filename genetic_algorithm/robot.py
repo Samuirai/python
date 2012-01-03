@@ -4,10 +4,15 @@
 	description: robot who collects trash cans
 """
 import random
-from operator import itemgetter
 from Tkinter import * 
 
 """
+The GENOME. It's a string with a lenght of _life. integers between 0-7 describe the behaviour.
+The robot always wants to go to a trash can (he sees the 4 blocks up, right, down and left).
+For example if the next step is a 0, he will go up, if on this field is trash. If there is no trash
+around him, he also will go up. if only trash is on his right, he will go right.
+0-3 normal step towards trash in a direction
+4-7 normal step towards trash and also pick it up
 	0 : up
 	1 : right
 	2 : down
@@ -19,18 +24,20 @@ from Tkinter import *
 """
 
 # settings:
-_life = 100
-_x = 10
-_y = 10
-_wallPoints = -5
-_trashPoint = 20
-_walkPoint = -1
+_life = 100 #genome lenght = step lenght
+_x = 10 # field size
+_y = 10 # field size
+_wallPoint = -10 # points when he hit a wall
+_trashPoint = 20 # points for collect trash
+_walkPoint = -1 # points for do a normal step
 
+# creates a random genome
 def createGenome(anz=10):
 	genome = ""
 	for i in xrange(0,anz): genome += str(random.randint(0,7))
 	return genome
 
+# a robot
 class Robot:
 	def __init__(self):
 		self.age = 0
@@ -55,6 +62,7 @@ def generateField():
 		['X','X','X','X','X','X','X','X','X','X'],
 	]
 	return _field
+    # random generated field:
 	"""_field = []
 	for x in xrange(0,_x):
 		tmp = []
@@ -64,6 +72,7 @@ def generateField():
 		_field.append(tmp)
 	return _field"""
 
+#renders the field with characters
 def render(robot):
 	countX,countY = 0,0
 	line = ""
@@ -82,36 +91,36 @@ def render(robot):
 	
 		
 		
-
+# moves the robot in a specific direction
 def robotMove(robot,dir):
 	robot.age += 1
 	if dir == 0:
 		if field[robot.y-1][robot.x] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			robot.y-=1
 			robot.points += _walkPoint
 	elif dir == 1:
 		if field[robot.y][robot.x+1] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			robot.x+=1
 			robot.points += _walkPoint
 	elif dir == 2:
 		if field[robot.y+1][robot.x] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			robot.y+=1
 			robot.points += _walkPoint
 	elif dir == 3:
 		if field[robot.y][robot.x-1] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			robot.x-=1
 			robot.points += _walkPoint
 	elif dir == 4:
 		if field[robot.y-1][robot.x] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			if field[robot.y-1][robot.x] == '1':
 				field[robot.y-1][robot.x] = '0'
@@ -120,7 +129,7 @@ def robotMove(robot,dir):
 			robot.points += _walkPoint
 	elif dir == 5:
 		if field[robot.y][robot.x+1] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			if field[robot.y][robot.x+1] == '1':
 				field[robot.y][robot.x+1] = '0'
@@ -129,7 +138,7 @@ def robotMove(robot,dir):
 			robot.points += _walkPoint
 	elif dir == 6:
 		if field[robot.y+1][robot.x] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			if field[robot.y+1][robot.x] == '1':
 				field[robot.y+1][robot.x] = '0'
@@ -138,7 +147,7 @@ def robotMove(robot,dir):
 			robot.points += _walkPoint
 	elif dir == 7:
 		if field[robot.y][robot.x-1] == 'X':
-			robot.points += _wallPoints
+			robot.points += _wallPoint
 		else:
 			if field[robot.y][robot.x-1] == '1':
 				field[robot.y][robot.x-1] = '0'
@@ -147,7 +156,7 @@ def robotMove(robot,dir):
 			robot.points += _walkPoint
 	if robby.points<0: robby.points = 0
 		
-
+# let the life grow. The life of a robot is simulated here
 def run(robot,debug):
 	if debug: render(robot)
 	for step in robot.genome:
@@ -196,7 +205,8 @@ def sortDict(dic):
     keys = dic.keys()
     keys.sort()
     return map(dic.get, keys)
-   
+
+# evolution through cross ofer of genomes   
 def crossover(genome1,genome2,life):
 	cut = random.randint(1,life-1)
 	part11 = genome1[0:cut]
@@ -205,6 +215,7 @@ def crossover(genome1,genome2,life):
 	part22 = genome2[cut:life]
 	return((part11+part22),(part21+part12))
 
+# evolution through mutation
 def mutation(genome1,life):
 	genome1 = list(genome1)
 	for i in xrange(0,life/10): genome1[random.randint(1,life-1)] = str(random.randint(0,7))
@@ -212,12 +223,14 @@ def mutation(genome1,life):
 
 master = Tk()
 
+# tkInter foo fuer die GUI Animation
 w = Canvas(master, width=500, height=500)
 w.pack()
 import tkFont
 helv36 = tkFont.Font ( family="Courier New", size=14, )
 field = generateField()
 
+# zeig die Roboter GUI an
 def renderGui(robot):
 	w.delete("all")
 	w.create_rectangle(0, 0, 800, 500, fill="black")
@@ -252,7 +265,7 @@ renderGui(Robot())
 
 master.update()
 beste = (0,0)
-for j in xrange(0,1):
+for j in xrange(0,10):
 	population = []	
 	ges=0
 	for i in xrange(0,100):	
@@ -274,10 +287,10 @@ for j in xrange(0,1):
 	field = generateField()
 	robby = Robot()
 	robby.genome = population[random.randint(0,100)][1]
-	run(robby,True)
+	run(robby,False)
 	
 	gesold = 0
-	for i in xrange(0,100):
+	for i in xrange(0,10):
 		population2 = []	
 		ges = 0
 		for x in xrange(0,5):
