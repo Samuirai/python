@@ -1,4 +1,4 @@
-from verbundspass import *
+from magneticcard import *
 
 verbose = 0
 
