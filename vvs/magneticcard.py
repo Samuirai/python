@@ -1,3 +1,41 @@
+track2_b2a = {
+		"0000": "0",
+		"1000": "1",
+		"0100": "2",
+		"1100": "3",
+		"0010": "4",
+		"1010": "5",
+		"0110": "6",
+		"1110": "7",
+		"0001": "8",
+		"1001": "9",
+		"0101": ":",
+		"1101": ";",
+		"0011": "<",
+		"1011": "=",
+		"0111": ">",
+		"1111": "?",
+}
+
+track2_a2b = {
+		"0": "0000",
+		"1": "1000",
+		"2": "0100",
+		"3": "1100",
+		"4": "0010",
+		"5": "1010",
+		"6": "0110",
+		"7": "1110",
+		"8": "0001",
+		"9": "1001",
+		":": "0101",
+		";": "1101",
+		"<": "0011",
+		"=": "1011",
+		">": "0111",
+		"?": "1111",
+}
+
 track1_b2a = {
 		"000000": " ",
 		"000001": "@",
@@ -176,6 +214,14 @@ def create_7bits(bit_string):
 		bytes.append(bit_string[index:(index+7)])
 		index += 7
 	return bytes
+
+def create_5bits(bit_string):
+	bytes = []
+	index = 0
+	while(bit_string[index:(index+5):]):
+		bytes.append(bit_string[index:(index+5)])
+		index += 5
+	return bytes
 	
 def create_7bit2a(bit7_string):
 	iso = ""
@@ -184,6 +230,17 @@ def create_7bit2a(bit7_string):
 		if len(i) >= 6:
 			#if verbose: print i+": "+track1_b2a[i[:6]]
 			iso += track1_b2a[i[:6]]
+		else: 
+			left = i
+	return (iso,left)
+	
+def create_5bit2a(bit5_string):
+	iso = ""
+	left = ""
+	for i in bit5_string:
+		if len(i) >= 4:
+			#if verbose: print i+": "+track1_b2a[i[:6]]
+			iso += track2_b2a[i[:4]]
 		else: 
 			left = i
 	return (iso,left)
