@@ -1,11 +1,17 @@
-import threading
-import urllib, urllib2, cookielib, re
-import html5lib, random, hashlib
+import threading, urllib, urllib2, cookielib, re, html5lib, random, hashlib
 from html5lib import treebuilders, treewalkers
+from optparse import OptionParser
 
+
+parser = OptionParser()
+parser.add_option("-V", "--version", dest="version", default=0, help="show version number")
+parser.add_option("-v", "--vebose", dest="level", default=0, help="set a verbose level")
 #cj = cookielib.CookieJar()
 #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 
+(options, args) = parser.parse_args()
+print options
+print args
 
 class nazo:
 
@@ -35,12 +41,14 @@ class nazo:
 			# [img][color=#ff0000 ononerrorerror="eval(123)"][/color][/img]
 			# [img]pic" onerror="eval(123)"][/img]
 			# [img]pic" onerror="eval(123)" .png][/img]
+			# [img]http://www.pic.png" onerror="eval(123)"][/img]
+			# [img]http://www.pic.png" onerror="eval(123)" .png][/img]
 			try:
 				if element['name'] == u'img':
 					for attr in element['data']:
 						if attr[0] == u'onerror':
 							if attr[1] == u'eval('+self.random+')':
-								print "nested XSS"
+								print element
 			except:
 				pass
 			
@@ -57,7 +65,7 @@ class nazo:
 					script_tag_open = False;
 				elif script_tag_open:
 					if u'eval('+self.random+')' in element['data']:
-						print "script tag XSS"
+						print element
 			except:
 				pass
 				
@@ -70,7 +78,7 @@ class nazo:
 					for attr in element['data']:
 						if attr[0] == u'href':
 							if u'javascript:eval('+self.random+')' in attr[1]:
-								print "url XSS"
+								print element
 			except:
 				pass
 				
@@ -80,7 +88,6 @@ opener = urllib2.build_opener()
 login_data = urllib.urlencode({'bbcode' : inject.start_hash+'[img][color=#ff0000 onerror="eval('+inject.random+')"][/color][/img][url=asd.de]link[/url][url=javascript:eval('+inject.random+')]link[/url]'+inject.end_hash})
 response = opener.open('http://127.0.0.1/~samuirai/bbcode/index.php', login_data)
 html = response.read()
-
 
 i = re.search(inject.start_hash+"(.*)"+inject.end_hash,html).group(1)
 html = i
