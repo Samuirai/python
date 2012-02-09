@@ -1,0 +1,44 @@
+   _______________________________________________________________________________ 
+  |                                                                               |\  
+  |    NOTE: THIS TOOL DOES NOT WORK AT THE MOMENT. I JUST STARTED DEVELOPING.    | |
+  |_______________________________________________________________________________| |
+   \_______________________________________________________________________________\|
+   
+   
+   ___   \   \ | /
+  _____ \ \   \|/           __________   
+   ___   \  ___|___        /  ____   /  _______  __   ___________   ___________
+   ___ __     /|\         /  /   /  /  /  ___  |/ /  /_____   __/  /  _____   / 
+   ___   |   / | \       /  /   /  /  /  /  /    /    __  /__/    /  /    /  /
+  |   |   \    |        /  /   /  /  /  /__/    /  __/  /____    /  /____/  / >> nazo
+  |___|  _/\           /__/   /__/  /_______/|_/  /__________/  /__________/ >> by smrrd
+  |   '     `-------
+
+ >> a BBCode XSS Vulnerability Scanner
+
+
+___[Version]______________________________________________________________________________
+
+version.........  0.1.0v
+date............  9 February 2012
+coder...........  smrrd
+thx to..........  momo, hdznrrd, dop3j0e, rel0c8,
+                  r0_x, theflip, snapcatcher,
+                  glyxbaer, D4rk5in, travisgoodspeed
+                   and the whole @shackspace...
+
+
+___[Disclaimer]___________________________________________________________________________
+
+nazo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+See the GNU General Public License for more	details.
+
+Whatever you do with this tool is uniquely your responsibility. If you are not authorized to test
+a specific bbcode form be aware that such action might get you in trouble with a lot of law	
+enforcement agencies.
+
+I wrote this tool to help bbcode parser developers or penetration testers - who are 
+authorized - to test a product or their code for security issues.
+
+With Great Power Comes Great Responsibility!
