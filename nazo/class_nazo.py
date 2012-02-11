@@ -1,18 +1,25 @@
-import threading, urllib, urllib2, cookielib, re, html5lib, random, hashlib, class_helper,sys,traceback
+import threading, urllib, urllib2, cookielib, re, html5lib, random, hashlib, sys, traceback
+import class_helper, class_bbcode
 from html5lib import treebuilders, treewalkers
 
 class nazo:
 
-	def __init__(self,_helper=class_helper.helper()):
-
+	def __init__(self,_form,_resulturl=None,_post=[],_data="",_helper=class_helper.helper()):
+		try:
+			_helper.print_disclaimer()
 			self.helper = _helper
 			self.stream = None
+			self.bbcode = class_bbcode.bbcode(_helper)
+			self.bbcode.create_bbcode_list()
+			self.post = _post
+			self.data = _data
 			self.start_hash = str(hashlib.sha1(str(random.randint(0,10000))).hexdigest());
 			self.end_hash = str(hashlib.sha1(str(random.randint(0,10000))).hexdigest());
 			self.random = str(random.randint(11111111,99999999))
-			self.helper.print_disclaimer()
 			#self.helper.verbose(1,self.helper.ansi.BLUE+"Welcome to nazo - the BBCode XSS Vulnerability scanner"+self.helper.ansi.END)
-
+		except:
+			_helper.error("nazo.__init__()")
+			_helper.error(traceback.format_exc())
 		
 	def text2dom(self,_text):
 		parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
@@ -20,6 +27,27 @@ class nazo:
 		dom = parser.parse(_text)
 		stream = walker(dom)
 		self.stream = stream
+	
+	def check_bbcode(self):
+		data = ""
+		for bbcode in self.bbcode.bbcode_list:
+			data += str(bbcode[0])
+		(html,result) = self.get_result({self.data: self.start_hash+data+self.end_hash})
+		if result:
+			self.bbcode.check_bbcode_list(result,self.bbcode.bbcode_list)
+		else:
+			self.bbcode.check_bbcode_list(html,self.bbcode.bbcode_list)
+		
+	def get_result(self,_post):
+		opener = urllib2.build_opener()
+		login_data = urllib.urlencode(_post)
+		response = opener.open('http://127.0.0.1/~samuirai/bbcode/index.php', login_data)
+		html = response.read()
+		try:
+			result = re.search(self.start_hash+"(.*)"+self.end_hash,html).group(1)
+		except:
+			result = None
+		return (html,result)
 		
 	def check_injection(self,stream=None):
 		script_tag_open = False
