@@ -1,3 +1,4 @@
+import sys
 class helper:
 	
 	def __init__(self,_verbose=0,_error=0,_logfile="log"):
@@ -16,17 +17,32 @@ class helper:
 	    @staticmethod
 	    def POS(_x=0,_y=0):
 		   return '\033['+str(_x)+';'+str(_y)+'H'
+		   
+	def progress_bar(self,_progress,_max,_text):
+		_progress+=1
+		print ('\r[{0}] {1}% {2}'.format(('#'*int((float(_progress)/float(_max))*80))+(' '*(80-int((float(_progress)/float(_max))*80))), int((float(_progress)/float(_max))*100),_text)),
+		sys.stdout.flush()
+		if (80-int((float(_progress)/float(_max))*80)) <= 0:
+			print ""
 				
 	def print_header(self,_text):
-		print "___["+self.ansi.BOLD+_text+self.ansi.END+"]___________________________"
+		print "\r"+"___["+self.ansi.BOLD+_text+self.ansi.END+"]___________________________"
 	
 	def verbose(self,_level, _message):
 		if _level <= self.verbose_lvl:
-			print self.ansi.YELLOW+"["+str(_level)+"]"+self.ansi.END+" "+_message
+			print "\r"+self.ansi.YELLOW+"["+str(_level)+"]"+self.ansi.END+" "+_message
 			
 	def error(self, _message):
 		if self.error_lvl and self.verbose_lvl > 0:
-			print self.ansi.RED+"[Error]"+self.ansi.END+" "+_message
+			print "\r"+self.ansi.RED+"[Error]"+self.ansi.END+" "+_message
+	
+	def input(self, _message,_allowed=[],_default=None):
+		while True:
+			inp = raw_input("\r"+self.ansi.YELLOW+">>>"+self.ansi.END+" "+_message)
+			if inp.lower() in _allowed or _allowed == []:
+				return inp.lower()
+			elif inp == "":
+				if _default: return _default
 			
 	def print_nazo(self):
 		print """

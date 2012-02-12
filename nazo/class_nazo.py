@@ -1,18 +1,21 @@
-import threading, urllib, urllib2, cookielib, re, html5lib, random, hashlib, sys, traceback
+import threading, urllib, urllib2, cookielib, re, html5lib, random, hashlib, sys, traceback, random
 import class_helper, class_bbcode
 from html5lib import treebuilders, treewalkers
 
 class nazo:
 
-	def __init__(self,_form,_resulturl=None,_post=[],_data="",_helper=class_helper.helper()):
+	def __init__(self,_form,_resulturl=None,_post={},_data="",_helper=class_helper.helper()):
 		try:
 			_helper.print_disclaimer()
 			self.helper = _helper
 			self.stream = None
+			self.random = None
 			self.bbcode = class_bbcode.bbcode(_helper)
 			self.bbcode.create_bbcode_list()
 			self.post = _post
 			self.data = _data
+			self.skip = False
+			self.form = _form
 			self.start_hash = str(hashlib.sha1(str(random.randint(0,10000))).hexdigest());
 			self.end_hash = str(hashlib.sha1(str(random.randint(0,10000))).hexdigest());
 			self.random = str(random.randint(11111111,99999999))
@@ -28,32 +31,129 @@ class nazo:
 		stream = walker(dom)
 		self.stream = stream
 	
-	def check_bbcode(self):
+	def learn_bbcode(self):
+		self.skip = False
+		check_codes = []
+		data=""
+		self.helper.verbose(1,"Create BBCode list to try diffrent injection styles and learn something about the possibilities")
+		if "img" in [tag[0] for tag in self.bbcode.get_supported_bbcodes()]:
+			for tag in self.bbcode.get_supported_bbcodes():
+				if tag[0]=="b" or tag[0]=="u" or tag[0]=="i":
+					for valid_data in self.bbcode.get_valid_data("img"):
+						check_codes.append([("[img]"+valid_data+" ["+tag[0]+"][/"+tag[0]+"][/img]","",""),False])
+						data +="[img]"+valid_data+" ["+tag[0]+"][/"+tag[0]+"][/img]"
+						check_codes.append([("[img]["+tag[0]+"][/"+tag[0]+"]"+valid_data+"[/img]","",""),False])
+						data +="[img]["+tag[0]+"][/"+tag[0]+"]"+valid_data+"[/img]"
+						
+						check_codes.append([("[img]"+valid_data+" ["+tag[0]+"][/img][/"+tag[0]+"]","",""),False])
+						data +="[img]"+valid_data+" ["+tag[0]+"][/img][/"+tag[0]+"]"
+						check_codes.append([("[img]["+tag[0]+"]"+valid_data+"[/img][/"+tag[0]+"]","",""),False])
+						data +="[img]["+tag[0]+"]"+valid_data+"[/img][/"+tag[0]+"]"
+				
+				
+			data = ""
+			supported=0
+			(html,result) = self.get_result({self.data: self.start_hash+" "+data+" "+self.end_hash})
+			if result:
+				supported=self.bbcode.check_bbcode_list(result,check_codes)
+			else:
+				supported=self.bbcode.check_bbcode_list(html,check_codes)
+			self.helper.verbose(1,"[img] tag allows injected tags like [img][tag][/tag][/img]")
+			self.bbcode.tag_in_img = True
+	
+	# 1
+	def check_bbcode(self,_anz=None):
+		self.skip = False
+		self.helper.verbose(1,"Check the BBCodes if they are supported")
 		data = ""
+		counter = 0
+		counter2 = 0
+		_all_requests = ""
+		if self.random: random.shuffle(self.bbcode.bbcode_list)
 		for bbcode in self.bbcode.bbcode_list:
-			data += str(bbcode[0])
-		(html,result) = self.get_result({self.data: self.start_hash+data+self.end_hash})
-		if result:
-			self.bbcode.check_bbcode_list(result,self.bbcode.bbcode_list)
-		else:
-			self.bbcode.check_bbcode_list(html,self.bbcode.bbcode_list)
+			data += str(bbcode[0][0])
+			self.helper.progress_bar(counter2,len(self.bbcode.bbcode_list),"("+str(counter2)+"/"+str(len(self.bbcode.bbcode_list))+")")
+			counter += 1
+			counter2 += 1
+			if _anz:
+				if counter >= _anz:
+					self.helper.verbose(2,"partial check next "+str(_anz)+"")
+					(html,result) = self.get_result({self.data: self.start_hash+" "+data+" "+self.end_hash})
+					if result: _all_requests+=str(result)
+					data = ""
+					counter = 0
+		(html,result) = self.get_result({self.data: self.start_hash+" "+data+" "+self.end_hash})
+		if result: _all_requests+=str(result)
+		if _all_requests:
+			self.bbcode._supported=self.bbcode.check_bbcode_list(_all_requests,self.bbcode.bbcode_list)
+			return 1
+		return None
+	
+	def check_bbcode_xss(self):
+		self.skip = False
+		self.bbcode.create_bbcode_list_injection()
+		data = ""
+		injected = 0
+		counter = 0
+		if self.random: random.shuffle(self.bbcode.bbcode_list_injection)
+		for bbcode in self.bbcode.bbcode_list_injection:
+			self.helper.progress_bar(counter,len(self.bbcode.bbcode_list_injection),"("+str(injected)+"/"+str(counter)+" -> "+str(len(self.bbcode.bbcode_list_injection))+")")
+			counter += 1
+			data = str(bbcode[0][0])
+			(html,result) = self.get_result({self.data: self.start_hash+" "+data+" "+self.end_hash})
+			data = ""
+			#print html
+			if result:
+				self.text2dom(result)
+			else:
+				self.text2dom(html)
+			# result stored internaly. now check injection
+			if self.check_injection()==2:
+				injected+=1
+				self.helper.verbose(2,"Injection probably possible with "+self.helper.ansi.GREEN+bbcode[0][0]+self.helper.ansi.END)
+			elif self.check_injection()==1:
+				injected+=1
+				self.helper.verbose(3,"Injection maybe possible with "+self.helper.ansi.GREEN+bbcode[0][0]+self.helper.ansi.END)
+			else:
+				self.helper.verbose(4,"Injection not possible with "+self.helper.ansi.RED+bbcode[0][0]+self.helper.ansi.END)
+		#print data
+		self.helper.verbose(1,str(injected)+"/"+str(len(self.bbcode.bbcode_list_injection))+" tested XSS injections were successfull")
 		
 	def get_result(self,_post):
+		re.DOTALL
 		opener = urllib2.build_opener()
+		_post.update(self.post)
 		login_data = urllib.urlencode(_post)
-		response = opener.open('http://127.0.0.1/~samuirai/bbcode/index.php', login_data)
+		response = opener.open(self.form, login_data)
 		html = response.read()
-		try:
-			result = re.search(self.start_hash+"(.*)"+self.end_hash,html).group(1)
-		except:
+		self.helper.verbose(5,"HTML:\n"+html)
+		result = html[html.find(self.start_hash)+len(self.start_hash):html.find(self.end_hash)]
+		self.helper.verbose(5,"RESULT:\n"+result)
+		if not result:
+			self.helper.error("Couldn't find the expected hashes: internal Parser error")
+			if not self.skip:
+				answer = self.helper.input("Do you want to exit now? (Y = yes | n = no | r = see html | s = skip next error): ",["y","n","r","s"],"y")
+				if answer.lower()=='y':
+					exit(1)
+				elif answer.lower()=='r':
+					print "POST:\n"+str(_post)
+					print
+					print "HTML:\n"+str(html)
+				elif answer.lower()=='s':
+					self.skip = True
+			else:
+				self.helper.error("Skipped this Error. Next Module will reset this skip.")
 			result = None
+			#result = re.search(self.start_hash+"([.]*)"+self.end_hash,html).group(1)
 		return (html,result)
 		
 	def check_injection(self,stream=None):
 		script_tag_open = False
+		_injection = 0
 		if not stream:
 			stream = self.stream
 		for element in stream:
+			
 			# check img tags for onerror
 			#       url
 			#       size
@@ -69,13 +169,19 @@ class nazo:
 				if element['name'] == u'img':
 					for attr in element['data']:
 						if attr[0] == u'onerror':
-							if attr[1] == u'eval('+self.random+')':
-								self.helper.verbose(1,"<img> onerror eval() injection")
-								self.helper.verbose(2," "+str(element))
+							if attr[1] == u'eval()':
+								
+								self.helper.verbose(3," 1: "+str(element))
+								_injection = 2
+							elif u'eval()' in attr or u'eval()' in attr[1]:
+								self.helper.verbose(4," 2: "+str(element))
+								_injection = 1
 							else:
-								self.helper.verbose(1,"<img> onerror injection")
-								self.helper.verbose(2," "+str(element))
+								self.helper.verbose(4," 3: "+str(element))
+								_injection = 1
 			except KeyError:
+				pass
+			except TypeError:
 				pass
 			except:
 				self.helper.error(traceback.format_exc())
@@ -93,13 +199,17 @@ class nazo:
 				elif element['type'] == 'EndTag' and element['name'] == u'script':
 					script_tag_open = False;
 				elif script_tag_open:
-					if u'eval('+self.random+')' in element['data']:
+					if u'eval()' in element['data']:
 						self.helper.verbose(1,"<script> eval injection")
 						self.helper.verbose(2," "+str(element))
+						_injection = 2
 					else:
 						self.helper.verbose(1,"<script>")
 						self.helper.verbose(2," "+str(element))
+						_injection = 1
 			except KeyError:
+				pass
+			except TypeError:
 				pass
 			except:
 				self.helper.error(traceback.format_exc())
@@ -112,13 +222,17 @@ class nazo:
 				if element['name'] == u'a':
 					for attr in element['data']:
 						if attr[0] == u'href':
-							if u'javascript:eval('+self.random+')' in attr[1]:
+							if u'javascript:eval()' in attr[1]:
 								self.helper.verbose(1,"<a href=...> javascript:eval() injection")
 								self.helper.verbose(2," "+str(element))
+								_injection = 2
 			except KeyError:
+				pass
+			except TypeError:
 				pass
 			except:
 				self.helper.error(traceback.format_exc())
+		return _injection
 				
 				
 				
