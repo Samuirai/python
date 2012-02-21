@@ -55,12 +55,12 @@ try:
 	#inject = nazo(_form="http://127.0.0.1/~samuirai/bbcode/index.php",_helper=helper,_data='bbcode')
 	#
 	#inject = nazo(_form="http://bbcparser.recgr.com/demo.php",_post={"button": " Parse >>"},_helper=helper,_data='content')
-	inject.print_
 	number = None
 	while not inject.check_bbcode(number):
 		number = int(helper.input("adjust the number of BBCodes to check per request: "))
-	inject.learn_bbcode()
+	
 	inject.check_bbcode_xss()
+	inject.printResult()
 	#opener = urllib2.build_opener()
 	#login_data = urllib.urlencode({})
 	#response = opener.open('http://127.0.0.1/~samuirai/bbcode/index.php', login_data)
@@ -74,6 +74,7 @@ try:
 	#inject.check_injection()
 except KeyboardInterrupt:
 	helper.error("nazo exited with CTRL+C")
+	inject.printResult()
 except EOFError:
 	helper.error("nazo exited with CTRL+D")
 except SystemExit:

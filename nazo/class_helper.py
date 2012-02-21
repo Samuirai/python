@@ -20,7 +20,7 @@ class helper:
 		   
 	def progress_bar(self,_progress,_max,_text):
 		_progress+=1
-		print ('\r[{0}] {1}% {2}'.format(('#'*int((float(_progress)/float(_max))*80))+(' '*(80-int((float(_progress)/float(_max))*80))), int((float(_progress)/float(_max))*100),_text)),
+		print ('[{0}] {1}% {2}\r'.format(('#'*int((float(_progress)/float(_max))*80))+(' '*(80-int((float(_progress)/float(_max))*80))), int((float(_progress)/float(_max))*100),_text)),
 		sys.stdout.flush()
 		if (80-int((float(_progress)/float(_max))*80)) <= 0:
 			print ""
