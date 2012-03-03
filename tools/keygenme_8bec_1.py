@@ -1,5 +1,6 @@
 # KeyGen for 8bec KeygenMe 1
 # keygenme_8bec.exe
+# usage: python keygenme_8bec_1.py <username>
 
 import sys
 
