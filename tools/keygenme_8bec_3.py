@@ -29,7 +29,7 @@ def smrrd_char_fun(c):
         ebp_8 += 0x01
         
 smrrd_char_fun('s')
-print "start calculating pythagoras triangle"
+print "start calculating pythagorean triangle"
 smrrd_erg = [0x115,0x1261,0x1735,0x7d,0x6f,0xbe,0x1261,0x6f]
 smrrd_erg = []
 for c in name:
@@ -47,6 +47,5 @@ for erg in smrrd_erg:
         smrrd_sum *= 2
         smrrd_sum += 0x13 + 0x0b + 0x0d
     smrrd_counter += 1
-    print ""
     
-print "password: "+str(smrrd_sum)
+print name+":"+str(smrrd_sum)
