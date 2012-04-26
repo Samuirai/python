@@ -1,3 +1,12 @@
+#                              __  #
+#     _____ ________ ______ __/ /  #
+#    /  __/  ,  ,  /  _/ _/__  /   #
+#   /__  /  /  /  /  /  / /_/ /    #
+#  /____/__/__/__/__/__/_____/     #
+#  >> I want to write exploits...  #
+#  >> May you teach me?            #
+#                                  # 
+
 pokemon_list = { 
     1: { 'nickname': 'Bulbasur', 'extra': [ 0,151 ] },
     2: { 'nickname': 'Ivysaur', 'extra': [ 0,151 ] },

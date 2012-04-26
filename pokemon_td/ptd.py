@@ -1,3 +1,12 @@
+#                              __  #
+#     _____ ________ ______ __/ /  #
+#    /  __/  ,  ,  /  _/ _/__  /   #
+#   /__  /  /  /  /  /  / /_/ /    #
+#  /____/__/__/__/__/__/_____/     #
+#  >> I want to write exploits...  #
+#  >> May you teach me?            #
+#                                  # 
+
 import aes, urllib,urllib2, time, cookielib, re
 import ptd_info
 import random

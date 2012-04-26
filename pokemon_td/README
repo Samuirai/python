@@ -7,17 +7,11 @@
 #  >> May you teach me?            #
 #                                  # 
 
-import ptd_info
-from ptd import smrrd_PTD
+Basically, this is a save editor for Pokemon Tower Defense [0]
 
-ptd = smrrd_PTD(email='EMAIL',password='PASSWORD',version='650',aes_key='lkafd8halkf',verbose_lvl=1)
+* ptd_main.py | example usage
+* ptd.py      | the important class
+* ptd_info.py | matches numbers->pokemon for a nicer output
+* aes.py      | an AES implementation in python
 
-ptd.login()
-
-ptd.catch(num=1,lvl=100, shiny=True)
-ptd.catch(num=2,lvl=100, m1=123, m2=42)
-    
-ptd.info()
-
- _____
-/  __/
+[0] http://samdangames.blogspot.de/p/play-ptd_03.html
