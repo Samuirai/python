@@ -157,7 +157,7 @@ pokemon_list = {
     147: { 'nickname': 'Dratini', 'extra': [ 0,151 ] },
     148: { 'nickname': 'Dragonair', 'extra': [ 0,151 ] },
     149: { 'nickname': 'Dragonite', 'extra': [ 0,151 ] },
-    150: { 'nickname': 'Mewtwo', 'extra': [] },
+    150: { 'nickname': 'Mewtwo', 'extra': [0,151] },
     151: { 'nickname': 'Mew', 'extra': [201] },
     243: { 'nickname': 'Raikou', 'extra': [] },
     244: { 'nickname': 'Entei', 'extra': [] },
