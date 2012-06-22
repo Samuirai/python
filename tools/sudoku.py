@@ -1,3 +1,5 @@
+import copy
+
 # solveable
 grid = [[3,0,0, 2,4,0, 0,6,0],
         [0,4,0, 0,0,0, 0,5,3],
@@ -21,18 +23,17 @@ grid = [[0,0,7, 0,1,0, 0,0,0],
         [1,0,0, 0,0,9, 5,3,0]]
         
 # not solveable
-# grid = [[7,6,0, 5,0,0, 2,0,0],
-#         [1,0,2, 0,4,0, 0,7,8],
-#         [0,0,4, 0,0,8, 5,1,0],
-#         [0,0,0, 0,0,3, 0,0,0],
-#         [0,0,7, 1,0,2, 0,0,0],
-#         [9,0,0, 0,8,7, 6,0,0],
-#         [0,0,6, 0,0,0, 0,3,0],
-#         [0,1,0, 7,0,0, 8,0,0],
-#         [0,4,3, 0,0,9, 0,0,0]]
+grid = [[7,6,0, 5,0,0, 2,0,0],
+        [1,0,2, 0,4,0, 0,7,8],
+        [0,0,4, 0,0,8, 5,1,0],
+        [0,0,0, 0,0,3, 0,0,0],
+        [0,0,7, 1,0,2, 0,0,0],
+        [9,0,0, 0,8,7, 6,0,0],
+        [0,0,6, 0,0,0, 0,3,0],
+        [0,1,0, 7,0,0, 8,0,0],
+        [0,4,3, 0,0,9, 0,0,0]]
         
 def debug(_grid):
-    print '  0 1 2 3 4 5 6 7 8  '
     print '---------------------'
     for line in _grid:
         print '|',
@@ -46,27 +47,57 @@ def debug(_grid):
 
 debug(grid)
 
-def get_row(y):
-    return list(set(range(1,10))-set(grid[y]))
+def get_row(y,_grid):
+    return list(set(range(1,10))-set(_grid[y]))
 
-def get_col(x):
-    return list(set(range(1,10))-set([row[x] for row in grid]))
+def get_col(x,_grid):
+    return list(set(range(1,10))-set([row[x] for row in _grid]))
 
-def get_3x3(x,y):
-    return list(set(range(1,10))-set(sum([row[x/3*3:x/3*3+3] for row in grid[y/3*3:y/3*3+3]],[])))
+def get_3x3(x,y,_grid):
+    return list(set(range(1,10))-set(sum([row[x/3*3:x/3*3+3] for row in _grid[y/3*3:y/3*3+3]],[])))
 
-change=True
-# loop until nothign changes
-while(change):
-    change = False
+
+def solve(_grid):
+    #print " recursive call"
+    debug(_grid)
+    change=True
+    error=False
+    # loop until nothign changes
+    while(change and not error):
+        change = False
+        for y in xrange(0,9):
+            for x in xrange(0,9):
+                if _grid[y][x] == 0:
+                    # merge all possible values together
+                    possible_values = list(set(get_row(y,_grid)) & set(get_col(x,_grid)) & set(get_3x3(x,y,_grid)))
+                    # if inly one value is possible for the field, fill it in, and set the flag for another run
+                    if(len(possible_values)==1):
+                        _grid[y][x] = possible_values[0]
+                        change = True
+                    if(len(possible_values)==0):
+                        #print "ERROR"
+                        return False
+
+    # recursive calls when undecidable
     for y in xrange(0,9):
         for x in xrange(0,9):
-            if grid[y][x] == 0:
+            if _grid[y][x] == 0:
                 # merge all possible values together
-                possible_values = list(set(get_row(y)) & set(get_col(x)) & set(get_3x3(x,y)))
-                # if inly one value is possible for the field, fill it in, and set the flag for another run
-                if(len(possible_values)==1):
-                    grid[y][x] = possible_values[0]
+                possible_values = list(set(get_row(y,_grid)) & set(get_col(x,_grid)) & set(get_3x3(x,y,_grid)))
+                if(len(possible_values)>1):
+                    # print x,y,possible_values
+                    for value in possible_values:
+                        tmp_grid = copy.deepcopy(_grid)
+                        tmp_grid[y][x] = value
+                        tmp_grid = solve(tmp_grid)
+                        if tmp_grid: # recursion
+                            return tmp_grid
                     change = True
+                if(len(possible_values)==0):
+                    #print "ERROR"
+                    return False
+    #print "ERROR"
+    return _grid
+    # easy number chosing stucks
 
-debug(grid)
+debug(solve(grid))
